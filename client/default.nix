@@ -33,6 +33,7 @@ let overrideCabal = pkg: f: if pkg == null then null else lib.overrideCabal pkg 
         ########################################################################
         reflex = self.callPackage ./reflex {};
         reflex-dom = self.callPackage ./reflex-dom {};
+        shared = self.callPackage ../shared {};
 
         ########################################################################
         # ghcjs-boot packages
