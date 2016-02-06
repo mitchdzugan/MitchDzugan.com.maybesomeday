@@ -11,7 +11,7 @@ Category: FRP
 Build-type: Simple
 Cabal-version: >=1.8
 
-executable reflex-todomvc
+executable client
   hs-source-dirs: src
   main-is: Main.hs
   build-depends:

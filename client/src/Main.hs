@@ -3,6 +3,7 @@ module Main where
 
 import Prelude hiding (mapM, mapM_, all, sequence)
 
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import qualified Data.Map as Map
 import qualified Network.HTTP.Client as C
@@ -24,7 +25,9 @@ manager = unsafePerformIO $ C.newManager C.defaultManagerSettings
 api :: Proxy API
 api = Proxy
 
-getUsers :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
+getUsers' :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
+
+getUsers _ = runExceptT getUsers'
 
 main = mainWidget $ el "div" $ do
   nx <- numberInput
@@ -34,6 +37,10 @@ main = mainWidget $ el "div" $ do
   result <- combineDyn (\o (x,y) -> stringToOp o <$> x <*> y) (_dropdown_value d) values
   resultString <- mapDyn show result
   text " = "
+  (button, _) <- elAttr' "button" ("class" =: "destroy") $ text "dank =D"
+  res <- performEvent $ fmap (liftIO . getUsers) $ domEvent Click button
+  resString <- holdDyn "Nothing Yet" $ fmap show res
+  dynText resString
   dynText resultString
 
 numberInput :: (MonadWidget t m) => m (Dynamic t (Maybe Double))

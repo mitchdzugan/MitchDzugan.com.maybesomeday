@@ -1,2 +1,3 @@
 */dist/*
 server/static/*.js
+node_modules
