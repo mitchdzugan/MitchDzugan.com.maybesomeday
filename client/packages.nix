@@ -15,6 +15,8 @@ with haskellPackages;
   # Add ghcjs-only packages here                                               #
   ##############################################################################
   shared
+  servant-client
+  either
 
 ] else []) ++ (if platform == "ghc" then [
   ##############################################################################

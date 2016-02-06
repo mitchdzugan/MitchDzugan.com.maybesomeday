@@ -22,8 +22,13 @@ executable reflex-todomvc
     containers,
     file-embed,
     text,
+    safe,
     mtl,
-    shared
+    transformers,
+    shared,
+    http-client,
+    servant,
+    servant-client
   other-extensions: TemplateHaskell
   ghc-prof-options: -fprof-auto
   ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2

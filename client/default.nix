@@ -1,4 +1,4 @@
-{ nixpkgsFunc ? import ./nixpkgs
+{ nixpkgsFunc ? import ./deps/nixpkgs
 , system ? null
 , config ? null
 }:
@@ -31,9 +31,11 @@ let overrideCabal = pkg: f: if pkg == null then null else lib.overrideCabal pkg 
         ########################################################################
         # Reflex packages
         ########################################################################
-        reflex = self.callPackage ./reflex {};
-        reflex-dom = self.callPackage ./reflex-dom {};
+        reflex = self.callPackage ./deps/reflex {};
+        reflex-dom = self.callPackage ./deps/reflex-dom {};
         shared = self.callPackage ../shared {};
+        servant = self.callPackage ../../servant {};
+        servant-client = self.callPackage ../../servant-client {};
 
         ########################################################################
         # ghcjs-boot packages
@@ -84,7 +86,7 @@ let overrideCabal = pkg: f: if pkg == null then null else lib.overrideCabal pkg 
           }
         ) {};
         /*
-        these = overrideCabal super.these (drv: { 
+        these = overrideCabal super.these (drv: {
           version = "0.5.0.0";
           src = nixpkgs.fetchgit {
             url = git://github.com/ryantrinkle/these;
