@@ -20,7 +20,13 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = return users :<|> serveDirectory "./static"
+server = getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> static
+  where getUsers = return users
+        getAdd a b = return (a + b)
+        getSub a b = return (a - b)
+        getMult a b = return (a * b)
+        getDiv a b = return (a `div` b)
+        static = serveDirectory "./static"
 
 users :: [User]
 users = [ User 1 "Isaac" "Newton"

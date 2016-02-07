@@ -25,25 +25,22 @@ manager = unsafePerformIO $ C.newManager C.defaultManagerSettings
 api :: Proxy API
 api = Proxy
 
-getUsers' :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
+getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
 
-getUsers _ = runExceptT getUsers'
+fmapApi apif e = performEvent $ fmap (liftIO . runExceptT . apif) e
 
 main = mainWidget $ el "div" $ do
   nx <- numberInput
-  d <- dropdown "*" (constDyn ops) def
+  d <- dropdown "+" (constDyn ops) def
   ny <- numberInput
   values <- combineDyn (,) nx ny
-  result <- combineDyn (\o (x,y) -> stringToOp o <$> x <*> y) (_dropdown_value d) values
-  resultString <- mapDyn show result
+  events <- combineDyn stringToOp (_dropdown_value d) values
+  res <- fmapApi id $ updated events
+  resString <- holdDyn "0" $ fmap show res
   text " = "
-  (button, _) <- elAttr' "button" ("class" =: "destroy") $ text "dank =D"
-  res <- performEvent $ fmap (liftIO . getUsers) $ domEvent Click button
-  resString <- holdDyn "Nothing Yet" $ fmap show res
   dynText resString
-  dynText resultString
 
-numberInput :: (MonadWidget t m) => m (Dynamic t (Maybe Double))
+numberInput :: (MonadWidget t m) => m (Dynamic t (Maybe Integer))
 numberInput = do
   let errorState = Map.singleton "style" "border-color: red"
       validState = Map.singleton "style" "border-color: green"
@@ -56,10 +53,11 @@ numberInput = do
                                   Nothing -> errorState) result
   return result
 
-stringToOp s = case s of
-                      "-" -> (-)
-                      "*" -> (*)
-                      "/" -> (/)
-                      _ -> (+)
+stringToOp _ (Nothing, _) = return 0
+stringToOp _ (_, Nothing) = return 0
+stringToOp "-" ((Just x), (Just y)) = getSub x y
+stringToOp "*" ((Just x), (Just y)) = getMult x y
+stringToOp "/" ((Just x), (Just y)) = getDiv x y
+stringToOp _   ((Just x), (Just y)) = getAdd x y
 
 ops = Map.fromList [("+", "+"), ("-", "-"), ("*", "*"), ("/", "/")]

@@ -19,6 +19,21 @@ function reloadClient() {
   clientNix.stdin.write("make config\n")
 }
 
+function reloadServer() {
+  if (serverNix != null ) {
+    serverNix.kill();
+  }
+  serverNix = p.spawn('nix-shell', {
+      cwd: "server",
+      stdio: [
+        'pipe',
+        0,
+        0
+      ]
+  });
+  serverNix.stdin.write("cabal configure && cabal run\n")
+}
+
 function buildClient() {
   if (clientNix != null) {
     clientNix.stdin.write("make build\n")
@@ -34,22 +49,37 @@ module.exports = function(grunt) {
       shared: {
         files: ['shared/**/*.hs', 'shared/**/*.cabal', 'shared/**/*.nix'],
         tasks: ['shared'],
+        options: {
+          spawn: false
+        }
       },
       clientHaskell: {
         files: ['client/**/*.hs'],
         tasks: ['client-haskell'],
+        options: {
+          spawn: false
+        }
       },
       clientEnv: {
         files: ['client/**/*.cabal', 'client/**/*.nix'],
         tasks: ['client-env'],
+        options: {
+          spawn: false
+        }
       },
       serverHaskell: {
         files: ['server/**/*.hs'],
         tasks: ['server-haskell'],
+        options: {
+          spawn: false
+        }
       },
       serverEnv: {
         files: ['server/**/*.cabal', 'server/**/*.nix'],
         tasks: ['server-env'],
+        options: {
+          spawn: false
+        }
       },
     },
   });
@@ -60,6 +90,7 @@ module.exports = function(grunt) {
   grunt.registerTask('shared', 'shared-changed', function() {
     grunt.log.write('shared changed...').ok();
     reloadClient();
+    reloadServer();
   });
 
   grunt.registerTask('client-haskell', 'client-haskell-changed', function() {
@@ -74,9 +105,11 @@ module.exports = function(grunt) {
 
   grunt.registerTask('server-haskell', 'server-haskell-changed', function() {
     grunt.log.write('server-haskell changed...').ok();
+    reloadServer();
   });
 
   grunt.registerTask('server-env', 'server-haskell-env', function() {
     grunt.log.write('server-env changed...').ok();
+    reloadServer();
   });
 };

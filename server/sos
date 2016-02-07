@@ -1,0 +1,1 @@
+sos -c "killall server-exe; cabal run" -p "(.*)\.hs"

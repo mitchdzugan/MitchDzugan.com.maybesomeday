@@ -17,4 +17,8 @@ data User = User
 $(deriveJSON defaultOptions ''User)
 
 type API = "users" :> Get '[JSON] [User]
+  :<|> "add" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
+  :<|> "sub" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
+  :<|> "mult" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
+  :<|> "div" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
   :<|> Raw
