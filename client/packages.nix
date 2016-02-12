@@ -17,6 +17,9 @@ with haskellPackages;
   shared
   servant-client
   either
+  boomerang
+  web-routes
+  web-routes-boomerang
 
 ] else []) ++ (if platform == "ghc" then [
   ##############################################################################

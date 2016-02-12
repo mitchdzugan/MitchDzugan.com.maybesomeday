@@ -1,1 +1,1 @@
-sos -c "make build" -p "(.*)\.hs"
+sos -c "make build" -p "(.*)\.hs$"

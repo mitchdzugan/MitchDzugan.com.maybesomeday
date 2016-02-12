@@ -28,7 +28,12 @@ executable client
     shared,
     http-client,
     servant,
-    servant-client
+    servant-client,
+    boomerang,
+    web-routes,
+    web-routes-boomerang,
+    bytestring,
+    ghcjs-base
   other-extensions: TemplateHaskell
   ghc-prof-options: -fprof-auto
   ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2

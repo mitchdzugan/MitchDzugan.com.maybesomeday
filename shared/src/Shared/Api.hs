@@ -21,4 +21,5 @@ type API = "users" :> Get '[JSON] [User]
   :<|> "sub" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
   :<|> "mult" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
   :<|> "div" :> Capture "a" Integer :> Capture "b" Integer :> Get '[JSON] Integer
+  :<|> "static" :> Raw
   :<|> Raw
