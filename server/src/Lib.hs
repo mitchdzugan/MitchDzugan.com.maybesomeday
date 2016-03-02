@@ -11,6 +11,7 @@ import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
 import Shared.Api
+import qualified Data.Text as T
 
 startApp :: IO ()
 startApp = run 8080 app
@@ -31,12 +32,14 @@ index = responseFile
     Nothing
 
 server :: Server API
-server = getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> static :<|> home
+server = getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> rep :<|> static :<|> home
   where getUsers = return users
         getAdd a b = return (a + b)
         getSub a b = return (a - b)
         getMult a b = return (a * b)
         getDiv a b = return (a `div` b)
+        rep (Just s) = return ((T.unpack s) ++ (T.unpack s))
+        rep (Nothing) = return "Doh"
         static = serveDirectory "./static"
         home = appFile
 

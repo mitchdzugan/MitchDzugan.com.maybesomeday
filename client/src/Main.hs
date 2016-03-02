@@ -1,90 +1,93 @@
-{-# LANGUAGE RecursiveDo, ScopedTypeVariables, FlexibleContexts, TypeFamilies, ConstraintKinds, TemplateHaskell, ForeignFunctionInterface, JavaScriptFFI, PatternSynonyms #-}
+{-# LANGUAGE TypeOperators, MultiParamTypeClasses, FlexibleInstances
+           , RecursiveDo, ScopedTypeVariables, FlexibleContexts, TypeFamilies
+           , ConstraintKinds, TemplateHaskell, ForeignFunctionInterface
+           , JavaScriptFFI, PatternSynonyms #-}
 module Main where
 
 import Prelude hiding (mapM, mapM_, all, sequence)
 
-import           GHCJS.Types
-import qualified Data.JSString as JSS
-import Control.Monad
-import Data.ByteString.Char8
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import qualified Data.Map as Map
 import qualified Network.HTTP.Client as C
 import Data.Proxy
+import qualified Data.Text.Internal as TI
 import System.IO.Unsafe (unsafePerformIO)
 import Safe (readMay)
-import Control.Applicative ((<*>), (<$>))
-import qualified Data.Text as T
-
 import Reflex
 import Reflex.Dom
-
+import Reflex.Dom.Route
+import Reflex.Dom.LocalStorage
 import Shared.Api
-
 import Servant.API
 import Servant.Client
-
 import Sitemap
 
-import Web.Routes
-
-
-import Text.Boomerang.String (parseString)
-
+manager :: C.Manager
 manager = unsafePerformIO $ C.newManager C.defaultManagerSettings
 
 api :: Proxy API
 api = Proxy
 
-getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> _ :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
+getUsers :: ExceptT ServantError IO [User]
+getAdd :: Integer -> Integer -> ExceptT ServantError IO Integer
+getSub :: Integer -> Integer -> ExceptT ServantError IO Integer
+getMult :: Integer -> Integer -> ExceptT ServantError IO Integer
+getDiv :: Integer -> Integer -> ExceptT ServantError IO Integer
+rep :: Maybe TI.Text -> ExceptT ServantError IO [Char]
+getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> rep :<|> _ :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
 
+{-}
 mapEventIO io = performEvent . fmap (liftIO . io)
-
 fmapApi apif = mapEventIO (runExceptT . apif)
+-}
 
-thing :: (MonadWidget t m) => String -> m (Event t (Either String Sitemap))
+e404_f :: (MonadWidget t m) => m (SharedState t Sitemap)
+e404_f = do
+  text "404 doesnt exist"
+  return SharedState {routing =  never}
+
+thing :: (MonadWidget t m) => String -> m (SharedState t Sitemap)
 thing s = do
   (buttonHome, _) <- elAttr' "button" ("class" =: "") $ text "Home"
   (buttonBlog, _) <- elAttr' "button" ("class" =: "") $ text "Blog"
   (buttonBlogNew, _) <- elAttr' "button" ("class" =: "") $ text "Blog New"
   text s
-  return $ leftmost [ fmap (\_ -> Right HomeR) (domEvent Click buttonHome)
-                    , fmap (\_ -> Right BlogR) (domEvent Click buttonBlog)
-                    , fmap (\_ -> Right NewBlogPostR) (domEvent Click buttonBlogNew)
-                    ]
+  return SharedState {routing = leftmost [ fmap (\_ -> HomeR) (domEvent Click buttonHome)
+                                         , fmap (\_ -> BlogR) (domEvent Click buttonBlog)
+                                         , fmap (\_ -> NewBlogPostR) (domEvent Click buttonBlogNew)
+                                         ]}
 
-rf :: (MonadWidget t m) => Either String Sitemap -> m (Event t (Either String Sitemap))
-rf (Left s) = thing $ "ohhh nooo " ++ s
-rf (Right sm) = thing $ show sm
+rf :: (MonadWidget t m) => Sitemap -> m (SharedState t Sitemap)
+rf sm = thing $ show sm
 
-getWindowLocation :: IO String
-getWindowLocation = do
-    liftM JSS.unpack $ js_windowLocationPathname
+data SharedState t url = SharedState { routing :: Event t url 
+                                     }
 
-pushState :: String -> IO ()
-pushState s = js_windowHistoryPushState $ JSS.pack s
+instance HasRouteEvent (SharedState t Sitemap) t Sitemap where
+  routeEvent = routing
 
-foreign import javascript unsafe
-  "window.location.pathname"
-  js_windowLocationPathname :: IO JSString
+addMaybs :: Maybe Int -> Maybe Int -> Maybe Int
+addMaybs Nothing r = r
+addMaybs (Just l) Nothing = Just l
+addMaybs (Just l) (Just r) = Just (l + r)
 
-foreign import javascript unsafe
-  "window.history.pushState({}, '', $1)"
-  js_windowHistoryPushState :: JSString -> IO ()
+numberInput :: (MonadWidget t m) => m (Dynamic t (Maybe Int))
+numberInput = do
+  let errorState = Map.singleton "style" "border-color: red"
+      validState = Map.singleton "style" "border-color: green"
+  rec n <- textInput $ def & textInputConfig_inputType .~ "number"
+                       & textInputConfig_initialValue .~ "0"
+                       & textInputConfig_attributes .~ attrs
+      result <- mapDyn readMay $ _textInput_value n
+      attrs <- mapDyn (\r -> case r of
+                                  Just _ -> validState
+                                  Nothing -> errorState) result
+  return result
 
-getRouteR (Left _) = HomeR
-getRouteR (Right x) = x
-
-fixEmpty "" = "/"
-fixEmpty s = s
-
-route :: (MonadWidget t m) => (Either String Sitemap -> m (Event t (Either String Sitemap))) -> m ()
-route trf = do
-  initalLocation <- liftIO getWindowLocation
-  rec routeEvents <- widgetHold (trf (parsePathSegments bs (decodePathInfo (pack initalLocation)))) $ fmap trf $ switchPromptlyDyn routeEvents
-  performEvent . fmap (liftIO . pushState . fixEmpty . T.unpack . (\(ps, params) -> encodePathInfo ps params) . (formatPathSegments bs) . getRouteR) $ switchPromptlyDyn routeEvents
-  return ()
-
+main :: IO ()
 main = mainWidget $ el "div" $ do
-  route rf
+  maybs <- numberInput
+  numS <- (fromLocalStorage "myNums" $ fmap (addMaybs) $ updated maybs) >>= (mapDyn show)
+  _ <- routeBoomerang sitemap rf e404_f
+  text " === "
+  dynText numS

@@ -1,0 +1,35 @@
+flags: {}
+
+resolver: lts-3.16
+
+compiler: ghcjs-0.2.0.20151029_ghc-7.10.2
+compiler-check: match-exact
+setup-info:
+  ghcjs:
+    source:
+      ghcjs-0.2.0.20151029_ghc-7.10.2:
+        url: "https://github.com/nrolland/ghcjs/releases/download/v0.2.0.20151029/ghcjs-0.2.0.20151029.tar.gz"
+
+packages:
+- location: '.'
+- location: '../shared'
+- location:
+    git: https://github.com/ryantrinkle/reflex-dom.git
+    commit: f4dbdd799260bc203f7f5cdce18362cb896f6d57 # ghcjs-improved-base-2 branch
+  extra-dep: true
+- location:
+    git: https://github.com/haskell-servant/servant.git
+    commit: 2719a956d5356769f8419d5dda858022071105c9
+  subdirs:
+  - servant
+  - servant-client
+  extra-dep: true
+
+extra-deps:
+  - reflex-0.3.2
+  - ref-tf-0.4
+  - these-0.6.1.0
+  - ghcjs-dom-0.2.3.0
+  - boomerang-1.4.5.1
+  - web-routes-0.27.10
+  - web-routes-boomerang-0.28.4
