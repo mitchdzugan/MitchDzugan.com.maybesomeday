@@ -5,7 +5,7 @@
 module Sitemap where
 
 import Prelude hiding ((.))
-import Control.Category 
+import Control.Category
 import Text.Boomerang.TH
 import Web.Routes.Boomerang ((<>))
 import Text.Boomerang.Prim
@@ -13,14 +13,14 @@ import Text.Boomerang.Texts
 import Data.Text.Internal
 import Text.Boomerang.HStack
 
-data Sitemap 
+data Sitemap
   = HomeR
   | LoginR
   | LogoutR
   | RegisterR
   | BlogR
   | NewBlogPostR
-  | ViewBlogPostR Integer 
+  | ViewBlogPostR Integer
   | EditBlogPostR Integer
   deriving (Eq,Show)
 makeBoomerangs ''Sitemap
@@ -32,6 +32,6 @@ sitemap =  rHomeR
         <> "register" . rRegisterR
         <> "blog" . (  rBlogR
                     <> rNewBlogPostR </> "new"
-                    <> rViewBlogPostR </> integer 
+                    <> rViewBlogPostR </> integer
                     <> rEditBlogPostR </> integer </> "edit"
                     )

@@ -1,0 +1,9 @@
+flags: {}
+
+resolver: lts-5.5
+
+packages:
+- location: '.'
+- location: '../shared'
+
+extra-deps: []

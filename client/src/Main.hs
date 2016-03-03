@@ -60,7 +60,7 @@ thing s = do
 rf :: (MonadWidget t m) => Sitemap -> m (SharedState t Sitemap)
 rf sm = thing $ show sm
 
-data SharedState t url = SharedState { routing :: Event t url 
+data SharedState t url = SharedState { routing :: Event t url
                                      }
 
 instance HasRouteEvent (SharedState t Sitemap) t Sitemap where
