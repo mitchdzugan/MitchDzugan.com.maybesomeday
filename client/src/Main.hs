@@ -6,6 +6,7 @@ module Main where
 
 import Prelude hiding (mapM, mapM_, all, sequence)
 
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import qualified Data.Map as Map
 import qualified Network.HTTP.Client as C
@@ -29,17 +30,20 @@ api :: Proxy API
 api = Proxy
 
 getUsers :: ExceptT ServantError IO [User]
+postUser :: String -> String -> ExceptT ServantError IO User
 getAdd :: Integer -> Integer -> ExceptT ServantError IO Integer
 getSub :: Integer -> Integer -> ExceptT ServantError IO Integer
 getMult :: Integer -> Integer -> ExceptT ServantError IO Integer
 getDiv :: Integer -> Integer -> ExceptT ServantError IO Integer
 rep :: Maybe TI.Text -> ExceptT ServantError IO [Char]
-getUsers :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> rep :<|> _ :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
+getLol :: ExceptT ServantError IO Integer
+getNoo :: ExceptT ServantError IO Integer
+getTest :: ExceptT ServantError IO Integer :<|> ExceptT ServantError IO Integer
+getUsers :<|> postUser :<|> getAdd :<|> getSub :<|> getMult :<|> getDiv :<|> getTest :<|> rep :<|> _ :<|> _ = client api (BaseUrl Http "localhost" 8080 "") manager
+getLol :<|> getNoo = getTest
 
-{-}
 mapEventIO io = performEvent . fmap (liftIO . io)
-fmapApi apif = mapEventIO (runExceptT . apif)
--}
+fmapApi apif = mapEventIO (runExceptT . (const apif))
 
 e404_f :: (MonadWidget t m) => m (SharedState t Sitemap)
 e404_f = do
@@ -48,14 +52,16 @@ e404_f = do
 
 thing :: (MonadWidget t m) => String -> m (SharedState t Sitemap)
 thing s = do
-  (buttonHome, _) <- elAttr' "button" ("class" =: "") $ text "Home"
-  (buttonBlog, _) <- elAttr' "button" ("class" =: "") $ text "Blog"
-  (buttonBlogNew, _) <- elAttr' "button" ("class" =: "") $ text "Blog New"
+  buttonHome <- el' "button" (text "Home") >>= return . (domEvent Click) . fst
+  buttonBlog <- el' "button" (text "Blog") >>= return . (domEvent Click) . fst
+  buttonBlogNew <- el' "button" (text "Blog New") >>= return . (domEvent Click) . fst
+  fmapApi (postUser "ayy" "lmao") buttonBlogNew
   text s
-  return SharedState {routing = leftmost [ fmap (\_ -> HomeR) (domEvent Click buttonHome)
-                                         , fmap (\_ -> BlogR) (domEvent Click buttonBlog)
-                                         , fmap (\_ -> NewBlogPostR) (domEvent Click buttonBlogNew)
+  return SharedState {routing = leftmost [ fmap (const HomeR) buttonHome
+                                         , fmap (const BlogR) buttonBlog
+                                         , fmap (const NewBlogPostR) buttonBlogNew
                                          ]}
+
 
 rf :: (MonadWidget t m) => Sitemap -> m (SharedState t Sitemap)
 rf sm = thing $ show sm

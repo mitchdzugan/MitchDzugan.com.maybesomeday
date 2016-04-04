@@ -1,1 +1,1 @@
-sos -c "killall server-exe; ./buildAndRun.sh" -p "(.*)\.hs$" -p "(.*)\.cabal$" -p "(.*)\.yaml$"
+sos -c "./buildAndRun.sh" -p "(.*)\.hs$" -p "(.*)\.cabal$" -p "(.*)\.yaml$"

@@ -6,4 +6,7 @@ packages:
 - location: '.'
 - location: '../shared'
 
-extra-deps: []
+extra-deps:
+  - opaleye-0.4.2.0 
+  - product-profunctors-0.6.3.1
+  - postgresql-simple-0.5.1.2

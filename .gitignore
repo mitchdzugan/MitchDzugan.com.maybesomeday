@@ -1,4 +1,2 @@
-*/dist/*
 */.stack-work/*
 server/static/*.js
-node_modules
